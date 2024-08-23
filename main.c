@@ -5,7 +5,7 @@
 
     const int screenWidth = 1200;
     const int screenHeight = 800;
-#define magazine 50
+#define magazine 200
 #define MAX_ASTEROIDS 300
 static bool GameOver = false;
 
@@ -23,8 +23,15 @@ typedef struct {
 Vector2 SpaceShip = {screenWidth/2,screenHeight/2};
 Asteroid _asteroids[MAX_ASTEROIDS] = {0};
 
+typedef struct main
+{
+    bool active;
+    Vector2 position;
+}bullet;
 
-static Vector2 max_fire[magazine] = {0};
+
+static bullet max_fire[magazine] = {0};
+
 int count = 0;
 int asteroid_count = 0;
 int wait = 0;
@@ -69,14 +76,15 @@ int main(void)
             const Vector2 v = SpaceShip;
             printf("v %f\n",v.x);
             if(count< magazine){
-                max_fire[count] = v;
+                max_fire[count].position = v;
+                max_fire[count].active = true;
                 count++;
             }
         };
         printf("%d \n",count);
 
         for(int i = 0;i<= count; i++){
-           max_fire[i].y -= 8.0f;          
+           max_fire[i].position.y -= 8.0f;          
         }
         for (int i = 0; i < asteroid_count; i++) {
             _asteroids[i].position.y += _asteroids[i].velocity;
@@ -97,7 +105,7 @@ int main(void)
                 .rotation = GetRandomValue(0,10000000) % 360,
                 .velocity = GetRandomValue(4,10),
                 .size = bulk,
-                .health = bulk*2
+                .health = (int)bulk/2
             };
             asteroid_count ++;
         }
@@ -120,13 +128,12 @@ int main(void)
         for(int i = 0; i < asteroid_count; i++){
             // _asteroids[i].size
             for(int j = 0; j< count; j++){
-            Vector2 bullet = max_fire[j];
+            Vector2 bullet = max_fire[j].position;
             Vector2 pos = _asteroids[i].position; 
             float distance = sqrt(pow((bullet.x - pos.x),2) + pow((bullet.y - pos.y),2));
 
-            if(distance < _asteroids[i].size*10){
-                bullet.y = screenHeight; // transport out of view
-                bullet.x = -0.25f;
+            if(distance < _asteroids[i].size*10 & _asteroids[i].active){
+                 max_fire[j].position = (Vector2){0,0};
                 _asteroids[i].health --;
                 if(_asteroids[i].health == 0) {_asteroids[i].active = false;}
             }  
@@ -135,7 +142,7 @@ int main(void)
 
         //Respawn asteroids
         if(asteroid_count == MAX_ASTEROIDS){
-            if(difficulty!=2){
+            if(difficulty!=4){
                 difficulty -=2;
             }
             reSpawnTimerAsteroids ++;
@@ -176,8 +183,10 @@ int main(void)
          
         //  drawing spaceship bullets
         for(int i = 0;i< count; i++){
+            if(max_fire[i].active){
 
-            DrawEllipse(max_fire[i].x,max_fire[i].y-10.0f,2,10,ORANGE);
+            DrawEllipse(max_fire[i].position.x,max_fire[i].position.y-10.0f,2,10,ORANGE);
+            }
         }
 
         // drawing asteroid
